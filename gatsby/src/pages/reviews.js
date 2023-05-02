@@ -16,8 +16,8 @@ const ReviewsPage = ({ data }) => {
 export const query = graphql`
   query AllPosts {
     allWpPost(
-        filter: { categories: { nodes: { elemMatch: { name: { eq: "reviews" } } } } }
-        sort: {date: DESC}
+      filter: { status: { eq: "publish" }, categories: { nodes: { elemMatch: { name: { eq: "reviews" } } } } }
+      sort: { date: DESC }
     ) {
       nodes {
         id
@@ -36,7 +36,7 @@ export const query = graphql`
             altText
             localFile {
               childImageSharp {
-                gatsbyImageData(quality: 100, placeholder: BLURRED, formats: [AUTO, WEBP, AVIF], width:200)
+                gatsbyImageData(quality: 100, placeholder: BLURRED, formats: [AUTO, WEBP, AVIF], width: 200)
               }
             }
           }

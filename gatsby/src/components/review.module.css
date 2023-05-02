@@ -2,3 +2,16 @@
     border-bottom: 1px solid #ccc;
     margin-bottom: 1rem;
 }
+.review > header h1 {
+    color: #634E2B;
+}
+.date {
+    color: #666;
+}
+.tags {
+    color: #666;
+    font-size: .9rem;
+}
+section {
+    line-height: 1.5rem;
+}
