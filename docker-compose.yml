@@ -1,0 +1,28 @@
+---
+version: '3.9'
+services:
+  db:
+    image: 'mariadb:10.11'
+    volumes:
+      - './data/mysql:/var/lib/mysql'
+    ports:
+      - 3306:3306
+    environment:
+      MARIADB_ROOT_PASSWORD: rootpw
+      MARIADB_DATABASE: wordpress
+      MARIADB_USER: wordpress
+      MARIADB_PASSWORD: secretpw
+  wordpress:
+    depends_on:
+      - db
+    image: 'wordpress:6.2-php8.0-apache'
+    ports:
+      - 8080:80
+    environment:
+      WORDPRESS_DB_HOST: 'db:3306'
+      WORDPRESS_DB_NAME: wordpress
+      WORDPRESS_DB_USER: wordpress
+      WORDPRESS_DB_PASSWORD: secretpw
+    volumes:
+      - "./wordpress/.htaccess:/var/www/html/.htaccess"
+      - "./wordpress/plugins:/var/www/html/wp-content/plugins"

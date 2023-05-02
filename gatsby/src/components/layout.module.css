@@ -1,0 +1,46 @@
+body {
+    font-family: Helvetica, Arial, sans-serif;
+    font-size: 1.25rem;
+    margin: 0;
+    padding: 0 0 4rem 0;
+    background-color: #EDF0E8;
+}
+.container > header {
+    padding: 1rem;
+    margin: 0;
+    border-bottom: 2px solid #5A605B;
+}
+.container > main,
+.container > footer,
+.container > header h1,
+.container > header nav {
+    width: 70%;
+    margin: auto;
+}
+.container > header nav {
+    margin-top: .5rem;
+}
+.container > header nav {
+    margin-top: .5rem;
+}
+.container > header nav a {
+    margin-right: 1rem;
+}
+.container > header {
+    margin-bottom: 1rem;
+}
+.container > footer {
+    margin-top: 3rem;
+    font-size: .9rem;
+    font-style: italic;
+}
+.container a,
+.container a:link,
+.container a:hover,
+.container a:visited,
+.container a:active {
+    color: #634E2B;
+}
+.container a:hover {
+    color: #D58960;
+}
