@@ -4,7 +4,6 @@ import Layout from "../components/layout";
 import Review from "../components/review";
 
 const ReviewsPage = ({ data }) => {
-  console.log("reviews data", data);
   return (
     <Layout>
       {data.allWpPost.nodes.map((node) => {

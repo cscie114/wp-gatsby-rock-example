@@ -1,6 +1,6 @@
 module.exports = {
   siteMetadata: {
-    title: `Rock Movie Challenge`,
+    title: `🪨 Rock Movie Extravaganza 🔥`,
     siteUrl: process.env.SITE_URL ||`http://localhost/`,
   },
   plugins: [
@@ -15,26 +15,12 @@ module.exports = {
     "gatsby-transformer-sharp",
     "gatsby-plugin-sitemap",
     {
-      resolve: "gatsby-plugin-manifest",
-      options: {
-        icon: "src/images/icon.png",
-      },
-    },
-    {
       resolve: "gatsby-source-filesystem",
       options: {
         name: "images",
         path: "./src/images/",
       },
       __key: "images",
-    },
-    {
-      resolve: "gatsby-source-filesystem",
-      options: {
-        name: "pages",
-        path: "./src/pages/",
-      },
-      __key: "pages",
     },
     {
       resolve: "gatsby-source-filesystem",

@@ -4,9 +4,7 @@ import Layout from "../components/layout";
 import * as styles from "./oeuvre.module.css";
 
 const OuevrePage = ({ data }) => {
-  console.log(data);
   const nodes = data.allRockMoviesJson.nodes;
-  console.log(nodes);
   return (
     <Layout>
         <div className={styles.movies}>
