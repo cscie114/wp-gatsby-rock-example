@@ -8,8 +8,10 @@ const processTag = (tag) => {
     const url = `https://www.imdb.com/title/${imdb_id}`;
     return <a href={url}>{url}</a>;
   } else if (tag.startsWith("rqd:")) {
-    const rqd = tag.split(":")[1];
-    return `Rock Quality Designation: ${rqd}`;
+    const rqd = parseInt(tag.split(":")[1], 10);
+    if(!isNaN(rqd)) {
+      return `Rock Quality Designation: ${'🪨'.repeat(rqd)}`
+    }
   }
   return null;
 };
