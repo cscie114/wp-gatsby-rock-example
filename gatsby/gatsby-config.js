@@ -1,10 +1,7 @@
-/**
- * @type {import('gatsby').GatsbyConfig}
- */
 module.exports = {
   siteMetadata: {
     title: `Rock Movie Challenge`,
-    siteUrl: `http://localhost/`,
+    siteUrl: process.env.SITE_URL ||`http://localhost/`,
   },
   plugins: [
     {
