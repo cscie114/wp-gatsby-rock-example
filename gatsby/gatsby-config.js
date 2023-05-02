@@ -29,5 +29,12 @@ module.exports = {
       }
     },
     'gatsby-transformer-json',
+    {
+      resolve: `gatsby-plugin-remote-images`,
+      options: {
+        nodeType: 'RockMoviesJson',
+        imagePath: 'Poster',
+      },
+    },
   ],
 };

@@ -1,5 +1,6 @@
 import * as React from "react";
 import { graphql } from "gatsby";
+import { GatsbyImage, getImage } from "gatsby-plugin-image";
 import Layout from "../components/layout";
 import * as styles from "./oeuvre.module.css";
 
@@ -9,11 +10,12 @@ const OuevrePage = ({ data }) => {
     <Layout>
         <div className={styles.movies}>
         {nodes.map((node) => {
+          const image = getImage(node.localImage)
           return (
             <div key={node.id}>
                 {/* {node.Year} {node.Title} */}
                 <a href={"https://www.imdb.com/title/"+node.imdbID}>
-                    <img src={node.Poster} alt={node.Title} style={{maxWidth:200}} />
+                    <GatsbyImage image={image} alt={node.Title}></GatsbyImage>
                 </a>
             </div>);
         })}
@@ -33,6 +35,11 @@ export const query = graphql`
         Actors
         Poster
         Year
+        localImage {
+          childImageSharp {
+            gatsbyImageData(width: 200)
+          }
+        }
       }
     }
   }
