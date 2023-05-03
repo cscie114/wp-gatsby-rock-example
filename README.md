@@ -2,7 +2,7 @@
 
 This is an example using [WordPress](https://wordpress.com/) as a headless CMS with [Gatsby](https://www.gatsbyjs.com/) as the frontend for CSCI E-114, Spring 2023.
 
-|||
+|Gatsby|Wordpress|
 | ----------- | ----------- |
 | ![Gatsby Screenshot](./docs/gatsby-screenshot.png) | ![Wordpress Screenshot](./docs/wordpress-screenshot.png) |
 
