@@ -4,16 +4,23 @@ namespace WPGraphQL\Data\Connection;
 /**
  * Class PluginConnectionResolver - Connects plugins to other objects
  *
- * @package WPGraphQL\Data\Resolvers
+ * @package WPGraphQL\Data\Connection
  * @since 0.0.5
  */
 class PluginConnectionResolver extends AbstractConnectionResolver {
 	/**
 	 * {@inheritDoc}
 	 *
-	 * @var array
+	 * @var array<string,array<string,mixed>>
 	 */
 	protected $query;
+
+	/**
+	 * A list of all the installed plugins, keyed by their type.
+	 *
+	 * @var ?array{site:array<string,mixed>,mustuse:array<string,mixed>,dropins:array<string,mixed>}
+	 */
+	protected $all_plugins;
 
 	/**
 	 * {@inheritDoc}
@@ -49,17 +56,13 @@ class PluginConnectionResolver extends AbstractConnectionResolver {
 	/**
 	 * {@inheritDoc}
 	 *
-	 * @return array
+	 * @return array<string,array<string,mixed>>
 	 */
 	public function get_query() {
-		// File has not loaded.
-		require_once ABSPATH . 'wp-admin/includes/plugin.php';
-		// This is missing must use and drop in plugins, so we need to fetch and merge them separately.
-		$site_plugins   = apply_filters( 'all_plugins', get_plugins() );
-		$mu_plugins     = apply_filters( 'show_advanced_plugins', true, 'mustuse' ) ? get_mu_plugins() : [];
-		$dropin_plugins = apply_filters( 'show_advanced_plugins', true, 'dropins' ) ? get_dropins() : [];
+		// Get all plugins.
+		$plugins = $this->get_all_plugins();
 
-		$all_plugins = array_merge( $site_plugins, $mu_plugins, $dropin_plugins );
+		$all_plugins = array_merge( $plugins['site'], $plugins['mustuse'], $plugins['dropins'] );
 
 		// Bail early if no plugins.
 		if ( empty( $all_plugins ) ) {
@@ -68,8 +71,8 @@ class PluginConnectionResolver extends AbstractConnectionResolver {
 
 		// Holds the plugin names sorted by status. The other ` status =>  [ plugin_names ] ` will be added later.
 		$plugins_by_status = [
-			'mustuse' => array_flip( array_keys( $mu_plugins ) ),
-			'dropins' => array_flip( array_keys( $dropin_plugins ) ),
+			'mustuse' => array_flip( array_keys( $plugins['mustuse'] ) ),
+			'dropins' => array_flip( array_keys( $plugins['mustuse'] ) ),
 		];
 
 		// Permissions.
@@ -85,8 +88,7 @@ class PluginConnectionResolver extends AbstractConnectionResolver {
 		$recently_activated_list = isset( $active_stati['recently_activated'] ) ? get_site_option( 'recently_activated', [] ) : [];
 
 		// Loop through the plugins, add additional data, and store them in $plugins_by_status.
-		foreach ( (array) $all_plugins as $plugin_file => $plugin_data ) {
-
+		foreach ( $all_plugins as $plugin_file => $plugin_data ) {
 			if ( ! file_exists( WP_PLUGIN_DIR . '/' . $plugin_file ) ) {
 				unset( $all_plugins[ $plugin_file ] );
 				continue;
@@ -141,7 +143,7 @@ class PluginConnectionResolver extends AbstractConnectionResolver {
 			if ( $can_update && isset( $upgradable_list->response[ $plugin_file ] ) ) {
 				// An update is available.
 				$plugin_data['update'] = true;
-				// Exra info if known.
+				// Extra info if known.
 				$plugin_data = array_merge( (array) $upgradable_list->response[ $plugin_file ], [ 'update-supported' => true ], $plugin_data );
 
 				// Populate upgradable list.
@@ -200,7 +202,7 @@ class PluginConnectionResolver extends AbstractConnectionResolver {
 			$matches = array_keys(
 				array_filter(
 					$all_plugins,
-					function ( $plugin ) use ( $s ) {
+					static function ( $plugin ) use ( $s ) {
 						foreach ( $plugin as $value ) {
 							if ( is_string( $value ) && false !== stripos( wp_strip_all_tags( $value ), $s ) ) {
 								return true;
@@ -223,7 +225,7 @@ class PluginConnectionResolver extends AbstractConnectionResolver {
 	/**
 	 * {@inheritDoc}
 	 */
-	public function get_loader_name() {
+	protected function loader_name(): string {
 		return 'plugin';
 	}
 
@@ -231,20 +233,15 @@ class PluginConnectionResolver extends AbstractConnectionResolver {
 	 * {@inheritDoc}
 	 */
 	public function is_valid_offset( $offset ) {
-		// File has not loaded.
-		require_once ABSPATH . 'wp-admin/includes/plugin.php';
-		// This is missing must use and drop in plugins, so we need to fetch and merge them separately.
-		$site_plugins   = apply_filters( 'all_plugins', get_plugins() );
-		$mu_plugins     = apply_filters( 'show_advanced_plugins', true, 'mustuse' ) ? get_mu_plugins() : [];
-		$dropin_plugins = apply_filters( 'show_advanced_plugins', true, 'dropins' ) ? get_dropins() : [];
+		$plugins = $this->get_all_plugins();
 
-		$all_plugins = array_merge( $site_plugins, $mu_plugins, $dropin_plugins );
+		$all_plugins = array_merge( $plugins['site'], $plugins['mustuse'], $plugins['dropins'] );
 
 		return array_key_exists( $offset, $all_plugins );
 	}
 
 	/**
-	 * @return bool
+	 * {@inheritDoc}
 	 */
 	public function should_execute() {
 		if ( is_multisite() ) {
@@ -258,5 +255,32 @@ class PluginConnectionResolver extends AbstractConnectionResolver {
 		}
 
 		return true;
+	}
+
+	/**
+	 * Gets all the installed plugins, including must use and drop in plugins.
+	 *
+	 * The result is cached in the ConnectionResolver instance.
+	 *
+	 * @return array{site:array<string,mixed>,mustuse:array<string,mixed>,dropins:array<string,mixed>}
+	 */
+	protected function get_all_plugins(): array {
+		if ( ! isset( $this->all_plugins ) ) {
+			// File has not loaded.
+			require_once ABSPATH . 'wp-admin/includes/plugin.php';
+
+			// This is missing must use and drop in plugins, so we need to fetch and merge them separately.
+			$site_plugins   = apply_filters( 'all_plugins', get_plugins() );
+			$mu_plugins     = apply_filters( 'show_advanced_plugins', true, 'mustuse' ) ? get_mu_plugins() : [];
+			$dropin_plugins = apply_filters( 'show_advanced_plugins', true, 'dropins' ) ? get_dropins() : [];
+
+			$this->all_plugins = [
+				'site'    => is_array( $site_plugins ) ? $site_plugins : [],
+				'mustuse' => $mu_plugins,
+				'dropins' => $dropin_plugins,
+			];
+		}
+
+		return $this->all_plugins;
 	}
 }

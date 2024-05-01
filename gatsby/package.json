@@ -1,11 +1,14 @@
 {
-  "name": "my-gatsby-site",
+  "name": "gatsby-rock-movie-extravaganza",
   "version": "1.0.0",
   "private": true,
-  "description": "my-gatsby-site",
+  "description": "A site celebrating the oeuvre of Dwayne 'The Rock' Johnson.",
   "author": "Arthur Barrett",
   "keywords": [
-    "gatsby"
+    "gatsby",
+    "wordpress",
+    "movies",
+    "The Rock"
   ],
   "scripts": {
     "develop": "gatsby develop",

@@ -2,12 +2,9 @@
 
 namespace WPGraphQL\Data\Connection;
 
-use Exception;
 use GraphQL\Error\UserError;
-use GraphQL\Type\Definition\ResolveInfo;
-use WP_Comment_Query;
-use WPGraphQL\AppContext;
 use WPGraphQL\Utils\Utils;
+use WP_Comment_Query;
 
 /**
  * Class CommentConnectionResolver
@@ -15,7 +12,6 @@ use WPGraphQL\Utils\Utils;
  * @package WPGraphQL\Data\Connection
  */
 class CommentConnectionResolver extends AbstractConnectionResolver {
-
 	/**
 	 * {@inheritDoc}
 	 *
@@ -25,14 +21,15 @@ class CommentConnectionResolver extends AbstractConnectionResolver {
 
 	/**
 	 * {@inheritDoc}
+	 *
+	 * @throws \GraphQL\Error\UserError
 	 */
 	public function get_query_args() {
 
 		/**
 		 * Prepare for later use
 		 */
-		$last  = ! empty( $this->args['last'] ) ? $this->args['last'] : null;
-		$first = ! empty( $this->args['first'] ) ? $this->args['first'] : null;
+		$last = ! empty( $this->args['last'] ) ? $this->args['last'] : null;
 
 		$query_args = [];
 
@@ -51,7 +48,7 @@ class CommentConnectionResolver extends AbstractConnectionResolver {
 		 *
 		 * @since 0.0.6
 		 */
-		$query_args['number'] = min( max( absint( $first ), absint( $last ), 10 ), $this->get_query_amount() ) + 1;
+		$query_args['number'] = $this->get_query_amount() + 1;
 
 		/**
 		 * Set the default order
@@ -94,7 +91,7 @@ class CommentConnectionResolver extends AbstractConnectionResolver {
 		 * Throw an exception if the query is attempted to be queried by
 		 */
 		if ( 'comment__in' === $query_args['orderby'] && empty( $query_args['comment__in'] ) ) {
-			throw new UserError( __( 'In order to sort by comment__in, an array of IDs must be passed as the commentIn argument', 'wp-graphql' ) );
+			throw new UserError( esc_html__( 'In order to sort by comment__in, an array of IDs must be passed as the commentIn argument', 'wp-graphql' ) );
 		}
 
 		/**
@@ -136,10 +133,10 @@ class CommentConnectionResolver extends AbstractConnectionResolver {
 		 * Filter the query_args that should be applied to the query. This filter is applied AFTER the input args from
 		 * the GraphQL Query have been applied and has the potential to override the GraphQL Query Input Args.
 		 *
-		 * @param array       $query_args array of query_args being passed to the
-		 * @param mixed       $source     source passed down from the resolve tree
-		 * @param array       $args       array of arguments input in the field as part of the GraphQL query
-		 * @param \WPGraphQL\AppContext $context object passed down the resolve tree
+		 * @param array<string,mixed>                  $query_args array of query_args being passed to the
+		 * @param mixed                                $source     source passed down from the resolve tree
+		 * @param array<string,mixed>                  $args       array of arguments input in the field as part of the GraphQL query
+		 * @param \WPGraphQL\AppContext                $context object passed down the resolve tree
 		 * @param \GraphQL\Type\Definition\ResolveInfo $info info about fields passed down the resolve tree
 		 *
 		 * @since 0.0.6
@@ -148,9 +145,7 @@ class CommentConnectionResolver extends AbstractConnectionResolver {
 	}
 
 	/**
-	 * Get_query
-	 *
-	 * Return the instance of the WP_Comment_Query
+	 * {@inheritDoc}
 	 *
 	 * @return \WP_Comment_Query
 	 * @throws \Exception
@@ -160,11 +155,9 @@ class CommentConnectionResolver extends AbstractConnectionResolver {
 	}
 
 	/**
-	 * Return the name of the loader
-	 *
-	 * @return string
+	 * {@inheritDoc}
 	 */
-	public function get_loader_name() {
+	protected function loader_name(): string {
 		return 'comment';
 	}
 
@@ -172,7 +165,7 @@ class CommentConnectionResolver extends AbstractConnectionResolver {
 	 * {@inheritDoc}
 	 */
 	public function get_ids_from_query() {
-		/** @var array $ids */
+		/** @var int[]|string[] $ids */
 		$ids = ! empty( $this->query->get_comments() ) ? $this->query->get_comments() : [];
 
 		// If we're going backwards, we need to reverse the array.
@@ -184,27 +177,12 @@ class CommentConnectionResolver extends AbstractConnectionResolver {
 	}
 
 	/**
-	 * This can be used to determine whether the connection query should even execute.
-	 *
-	 * For example, if the $source were a post_type that didn't support comments, we could prevent
-	 * the connection query from even executing. In our case, we prevent comments from even showing
-	 * in the Schema for post types that don't have comment support, so we don't need to worry
-	 * about that, but there may be other situations where we'd need to prevent it.
-	 *
-	 * @return boolean
-	 */
-	public function should_execute() {
-		return true;
-	}
-
-
-	/**
 	 * Filters the GraphQL args before they are used in get_query_args().
 	 *
-	 * @return array
+	 * @return array<string,mixed>
 	 */
 	public function get_args(): array {
-		$args = $this->args;
+		$args = $this->get_unfiltered_args();
 
 		if ( ! empty( $args['where'] ) ) {
 			// Ensure all IDs are converted to database IDs.
@@ -228,9 +206,12 @@ class CommentConnectionResolver extends AbstractConnectionResolver {
 					case 'contentAuthor':
 					case 'userId':
 						if ( is_array( $input_value ) ) {
-							$args['where'][ $input_key ] = array_map( function ( $id ) {
-								return Utils::get_database_id_from_id( $id );
-							}, $input_value );
+							$args['where'][ $input_key ] = array_map(
+								static function ( $id ) {
+									return Utils::get_database_id_from_id( $id );
+								},
+								$input_value
+							);
 							break;
 						}
 						$args['where'][ $input_key ] = Utils::get_database_id_from_id( $input_value );
@@ -239,23 +220,25 @@ class CommentConnectionResolver extends AbstractConnectionResolver {
 						if ( is_string( $input_value ) ) {
 							$input_value = [ $input_value ];
 						}
-						$args['where'][ $input_key ] = array_map( function ( $id ) {
-							if ( is_email( $id ) ) {
-								return $id;
-							}
+						$args['where'][ $input_key ] = array_map(
+							static function ( $id ) {
+								if ( is_email( $id ) ) {
+									return $id;
+								}
 
-							return Utils::get_database_id_from_id( $id );
-						}, $input_value );
+								return Utils::get_database_id_from_id( $id );
+							},
+							$input_value
+						);
 						break;
 				}
 			}
 		}
 
 		/**
-		 *
 		 * Filters the GraphQL args before they are used in get_query_args().
 		 *
-		 * @param array                     $args                The GraphQL args passed to the resolver.
+		 * @param array<string,mixed>                                  $args                The GraphQL args passed to the resolver.
 		 * @param \WPGraphQL\Data\Connection\CommentConnectionResolver $connection_resolver Instance of the ConnectionResolver
 		 *
 		 * @since 1.11.0
@@ -270,13 +253,12 @@ class CommentConnectionResolver extends AbstractConnectionResolver {
 	 * There's probably a cleaner/more dynamic way to approach this, but this was quick. I'd be
 	 * down to explore more dynamic ways to map this, but for now this gets the job done.
 	 *
-	 * @param array $args The array of query arguments
+	 * @param array<string,mixed> $args The array of query arguments
 	 *
 	 * @since  0.0.5
-	 * @return array
+	 * @return array<string,mixed>
 	 */
 	public function sanitize_input_fields( array $args ) {
-
 		$arg_mapping = [
 			'authorEmail'        => 'author_email',
 			'authorIn'           => 'author__in',
@@ -292,7 +274,7 @@ class CommentConnectionResolver extends AbstractConnectionResolver {
 			'contentAuthorNotIn' => 'post_author__not_in',
 			'contentId'          => 'post_id',
 			'contentIdIn'        => 'post__in',
-			'contentIdNotIn'     => 'post__not_in', // phpcs:ignore WordPressVIPMinimum.Performance.WPQueryParams.PostNotIn
+			'contentIdNotIn'     => 'post__not_in',
 			'contentName'        => 'post_name',
 			'contentParent'      => 'post_parent',
 			'contentStatus'      => 'post_status',
@@ -319,20 +301,21 @@ class CommentConnectionResolver extends AbstractConnectionResolver {
 		$query_args = apply_filters( 'graphql_map_input_fields_to_wp_comment_query', $query_args, $args, $this->source, $this->args, $this->context, $this->info );
 
 		return ! empty( $query_args ) && is_array( $query_args ) ? $query_args : [];
-
 	}
 
 	/**
-	 * Determine whether or not the the offset is valid, i.e the comment corresponding to the
-	 * offset exists. Offset is equivalent to comment_id. So this function is equivalent to
-	 * checking if the comment with the given ID exists.
+	 * {@inheritDoc}
 	 *
-	 * @param int $offset The ID of the node used for the cursor offset
-	 *
-	 * @return bool
+	 * @param int $offset The ID of the node used for the cursor offset.
 	 */
 	public function is_valid_offset( $offset ) {
 		return ! empty( get_comment( $offset ) );
 	}
 
+	/**
+	 * {@inheritDoc}
+	 */
+	public function should_execute() {
+		return true;
+	}
 }
