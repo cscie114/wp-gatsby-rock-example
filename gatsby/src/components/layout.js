@@ -27,7 +27,7 @@ const Layout = ({ children }) => {
         {children}
       </main>
       <footer>
-        Disclaimer: Demo for CSCI E-114 Spring 2023 (not an actual website)
+        Disclaimer: Demo for CSCI E-114 Spring 2024 (not an actual website)
       </footer>
     </div>
   );
