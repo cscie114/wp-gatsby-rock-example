@@ -41,6 +41,8 @@ In addition to the Wordpress data source, Gatsby also pulls in static data descr
 
 To setup [Netlify](https://netlify.com/) deployment, you need to have a Netlify account and publicly accessible Wordpress site configured with the [WPGraphQL](https://www.wpgraphql.com/) and [WPGatsby](https://wordpress.org/plugins/wp-gatsby/) plugins.
 
+The example in this repo uses a locally running Wordpress instance (via Docker) and [ngrok](https://ngrok.com/docs/agent/cli/) to temporarily make it available publicly so that Netlify can access it. This is purely for demonstration purposes.
+
 On **Netlify**:
 
 1. Create a new "site" from the git repository
@@ -62,6 +64,8 @@ On **Wordpress**:
     - Set the `Builds Webhook URL` using the Netlify build hook previously generated.
 2. Test the integration by creating or editing a Post.
     - If it worked, you should see Netlify automatically start a new build.
+
+
 
 ## Credits
 
