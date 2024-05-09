@@ -1,6 +1,6 @@
 # Wordpress + Gatsby Example
 
-This is an example using [WordPress](https://wordpress.com/) as a headless CMS with [Gatsby](https://www.gatsbyjs.com/) as the frontend for CSCI E-114, Spring 2023.
+This is an example using [WordPress](https://wordpress.com/) as a headless CMS with [Gatsby](https://www.gatsbyjs.com/) as the frontend for CSCI E-114, Spring 2024.
 
 |Gatsby|Wordpress|
 | ----------- | ----------- |
